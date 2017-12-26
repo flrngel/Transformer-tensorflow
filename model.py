@@ -136,9 +136,10 @@ class Transformer(object):
       with tf.variable_scope('projection'):
         self.logits = tf.layers.dense(outputs, dic_size)
 
-        self.loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
-            labels=self.sparse_outputs,
-            logits=self.logits)
+        self.loss = tf.reduce_mean(
+            tf.nn.sparse_softmax_cross_entropy_with_logits(
+              labels=self.sparse_outputs,
+              logits=self.logits))
 
       optimizer = tf.train.AdamOptimizer(learn_rate)
       self.optimize_op = optimizer.minimize(self.loss)
