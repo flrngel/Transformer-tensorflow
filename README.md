@@ -2,7 +2,7 @@
 
 Yet another tensorflow implemntation of [Attention Is All You Need](https://arxiv.org/abs/1706.03762)
 
-![model architecture](https://raw.githubusercontent.com/flrngel/Transformer-tensorflow/master/resources/transformer.jpg)
+<img src="https://raw.githubusercontent.com/flrngel/Transformer-tensorflow/master/resources/transformer.jpg" width=300>
 
 ## Usage
 
@@ -43,7 +43,7 @@ $ python train.py --dataset IWSLT16
 
 ## Training Loss
 
-![loss](https://raw.githubusercontent.com/flrngel/Transformer-tensorflow/master/resources/loss.jpg)
+<img src="https://raw.githubusercontent.com/flrngel/Transformer-tensorflow/master/resources/loss.jpg" width=300>
 
 ## References
 
