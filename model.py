@@ -1,5 +1,4 @@
 import tensorflow as tf
-print(tf.__version__)
 import numpy as np
 from flags import FLAGS
 
@@ -23,9 +22,9 @@ def multihead_attention_block(vk_input, q_input,
     batch_size, pad_length, d_model, d_k, d_v, masked=False):
 
   with tf.variable_scope('multihead_attention'):
-    K = tf.layers.dense(vk_input, d_k, name='K')
-    V = tf.layers.dense(vk_input, d_v, name='V')
-    Q = tf.layers.dense(q_input, d_k, name='Q')
+    K = tf.layers.dense(vk_input, d_k, name='K', activation=tf.nn.relu)
+    V = tf.layers.dense(vk_input, d_v, name='V', activation=tf.nn.relu)
+    Q = tf.layers.dense(q_input, d_k, name='Q', activation=tf.nn.relu)
 
     '''
     Scaled Dot-Product Attention
@@ -108,38 +107,66 @@ def positional_encoding(x):
 '''
 Transformer class
 '''
-
 class Transformer(object):
-  def __init__(self):
+  def __init__(self, inputs=None, outputs=None, sparse_outputs=None):
     pad_length = FLAGS.pad_length
     d_model = FLAGS.d_model
 
-    self.inputs = tf.placeholder(tf.float32, shape=[None, pad_length, d_model])
-    self.outputs = tf.placeholder(tf.float32, shape=[None, pad_length, d_model])
-    self.sparse_outputs = tf.placeholder(tf.int32, shape=[None, pad_length])
+    if inputs is None:
+      self.inputs = tf.placeholder(tf.float32, shape=[None, pad_length, d_model])
+    else:
+      self.inputs = inputs
 
-  def build_graph(self):
+    if outputs is None:
+      self.outputs = tf.placeholder(tf.float32, shape=[None, pad_length, d_model])
+    else:
+      self.outputs = outputs
+
+    if sparse_outputs is None:
+      self.sparse_outputs = tf.placeholder(tf.int32, shape=[None, pad_length])
+    else:
+      self.sparse_outputs = sparse_outputs
+
+  def build_graph(self, output_dim):
+    pad_length = FLAGS.pad_length
     N = FLAGS.stack_num
     learn_rate = FLAGS.learn_rate
-    dic_size = FLAGS.dic_size
 
     with tf.variable_scope('transformer'):
       inputs = positional_encoding(self.inputs)
       outputs = positional_encoding(self.outputs)
 
       for i in range(N):
-        inputs = encoder_block(inputs)
+        with tf.variable_scope('enc_b_' + str(i)):
+          inputs = encoder_block(inputs)
 
       for i in range(N):
-        outputs = decoder_block(outputs, inputs)
+        with tf.variable_scope('dec_b_' + str(i)):
+          outputs = decoder_block(outputs, inputs)
 
       with tf.variable_scope('projection'):
-        self.logits = tf.layers.dense(outputs, dic_size)
+        self.logits = tf.layers.dense(outputs, output_dim)
+        self.predict = tf.argmax(self.logits, axis=2)
 
-        self.loss = tf.reduce_mean(
-            tf.nn.sparse_softmax_cross_entropy_with_logits(
-              labels=self.sparse_outputs,
-              logits=self.logits))
+      with tf.variable_scope('loss'):
+        EOS_ID = 0
+        target_lengths = tf.reduce_sum(
+            tf.to_int32(tf.not_equal(self.sparse_outputs, EOS_ID)), 1) + 1
+        seq_mask = tf.sequence_mask(lengths=target_lengths,
+            maxlen=pad_length,
+            dtype=tf.float32)
+        y_ = tf.one_hot(self.sparse_outputs, depth=output_dim)
+        self.debug = self.logits
+        ys = y_.get_shape().as_list()[-1]
+        y_ = ((1-0.1) * y_) + (0.1 / ys)
 
-      optimizer = tf.train.AdamOptimizer(learn_rate)
+        self.loss = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=y_)*seq_mask
+        self.loss = tf.reduce_sum(self.loss, axis=1) / tf.to_float(target_lengths)
+        self.loss = tf.reduce_mean(self.loss)
+
+      tf.summary.scalar('loss', self.loss)
+
+      optimizer = tf.train.AdamOptimizer(learn_rate, beta1=0.9, beta2=0.98, epsilon=1e-8)
       self.optimize_op = optimizer.minimize(self.loss)
+
+      self.summary_op = tf.summary.merge_all()

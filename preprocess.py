@@ -8,7 +8,7 @@ word_dict_b = {'<EOS>': 0, '<SOS>': 1}
 
 def parser(data):
   TOKENIZER_RE = re.compile(r"[A-Z]{2,}(?![a-z])|[A-Z][a-z]+(?=[A-Z])|[\'\w\-]+", re.UNICODE)
-  return TOKENIZER_RE.findall(data)
+  return TOKENIZER_RE.findall(data.lower())
 
 def transform(arr, word_dict):
   result = []
@@ -30,7 +30,8 @@ if FLAGS.dataset == 'dummy':
     file_b = file_base+'train.b.txt'
     file_a_out = file_base+'train.a.ids.txt'
     file_b_out = file_base+'train.b.ids.txt'
-    file_vocab = file_base+'vocab.txt'
+    file_vocab_a = file_base+'vocab.a.txt'
+    file_vocab_b = file_base+'vocab.b.txt'
 elif FLAGS.dataset == 'IWSLT16':
   file_base = './data/IWSLT16/'
   if FLAGS.mode == 'train':

@@ -18,6 +18,6 @@ tf.app.flags.DEFINE_integer('batch_size', 32, 'batch size')
 tf.app.flags.DEFINE_float('dropout_keep', 0.9, 'dropout keep rate')
 tf.app.flags.DEFINE_integer('pad_length', 60, 'pad length')
 tf.app.flags.DEFINE_float('learn_rate', 1e-4, 'learn rate')
-tf.app.flags.DEFINE_integer('dic_size', 100000, 'dictionary size')
+tf.app.flags.DEFINE_boolean('use_pretrained_vec', False, 'flag for pretrained vector')
 
 FLAGS = tf.app.flags.FLAGS
