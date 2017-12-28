@@ -1,6 +1,6 @@
 # Transformer-tensorflow
 
-Yet another tensorflow implemntation of [Attention Is All You Need](https://arxiv.org/abs/1706.03762)
+Yet another tensorflow implementation of [Attention Is All You Need](https://arxiv.org/abs/1706.03762)
 
 <img src="https://raw.githubusercontent.com/flrngel/Transformer-tensorflow/master/resources/transformer.jpg" width=300>
 
